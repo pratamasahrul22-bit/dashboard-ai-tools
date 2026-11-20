@@ -1,0 +1,2145 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>AI VIDEO TOOLS STUDIO — SaaS Video Creation Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        obsidian: '#07070c',
+                        surface: '#11111b',
+                        card: '#13131f',
+                        borderDark: '#1f1f33',
+                    },
+                    boxShadow: {
+                        'neon-purple': '0 0 25px -5px rgba(139, 92, 246, 0.35)',
+                        'neon-cyan': '0 0 25px -5px rgba(6, 182, 212, 0.35)',
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        body {
+            background-color: #07070c;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+        .neon-btn {
+            background: linear-gradient(135deg, #7c3aed 0%, #2563eb 55%, #06b6d4 100%);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .neon-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px -4px rgba(124, 58, 237, 0.55);
+        }
+        .neon-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        @keyframes pulseBorder {
+            0%, 100% { border-color: rgba(139, 92, 246, 0.4); }
+            50% { border-color: rgba(6, 182, 212, 0.75); }
+        }
+        .animate-neon-border {
+            animation: pulseBorder 2.2s infinite ease-in-out;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a12;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #26263d;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7c3aed;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-purple-600/40 selection:text-white">
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+    <!-- Mobile Backdrop -->
+    <div id="mobile-backdrop" onclick="toggleMobileSidebar(false)" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-30 hidden lg:hidden"></div>
+
+    <div class="min-h-screen flex">
+        <!-- SIDEBAR NAVIGATION -->
+        <aside id="sidebar" class="fixed lg:sticky top-0 left-0 z-40 h-screen w-64 bg-[#0b0b13] border-r border-[#1f1f33] flex flex-col justify-between transition-all duration-300 -translate-x-full lg:translate-x-0 shrink-0">
+            <div>
+                <!-- Brand Header -->
+                <div class="h-16 px-4 flex items-center justify-between border-b border-[#1f1f33]">
+                    <div class="flex items-center gap-2.5 overflow-hidden">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-400 flex items-center justify-center shrink-0 shadow-neon-purple">
+                            <i data-lucide="clapperboard" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <div class="sidebar-label truncate">
+                            <span class="font-extrabold text-xs tracking-wider text-white block leading-tight">AI VIDEO TOOLS</span>
+                            <span class="font-bold text-[10px] tracking-widest text-cyan-400 block">STUDIO PRO</span>
+                        </div>
+                    </div>
+                    <button onclick="toggleMobileSidebar(false)" class="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Navigation Menu -->
+                <nav id="sidebar-nav" class="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-8.5rem)]">
+                    <!-- Populated via JS -->
+                </nav>
+            </div>
+
+            <!-- Sidebar Footer / Collapse Control -->
+            <div class="p-3 border-t border-[#1f1f33]">
+                <button onclick="toggleDesktopSidebar()" class="hidden lg:flex w-full items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-[#13131f] hover:bg-[#1a1a2b] border border-[#1f1f33] text-xs font-semibold text-slate-300 transition">
+                    <i id="collapse-icon" data-lucide="panel-left-close" class="w-4 h-4 text-purple-400"></i>
+                    <span class="sidebar-label" data-i18n="collapseSidebar">Tutup Sidebar</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN WORKSPACE AREA -->
+        <div class="flex-1 flex flex-col min-w-0">
+            <!-- TOP HEADER BAR -->
+            <header class="sticky top-0 z-20 h-16 bg-[#07070c]/85 backdrop-blur-md border-b border-[#1f1f33] px-4 sm:px-6 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3 min-w-0">
+                    <!-- Mobile Hamburger -->
+                    <button onclick="toggleMobileSidebar(true)" class="lg:hidden p-2 rounded-xl bg-[#13131f] border border-[#1f1f33] text-slate-200 hover:border-purple-500/50">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <div class="min-w-0">
+                        <h1 id="header-title" class="text-sm sm:text-base font-extrabold text-white tracking-tight truncate">AI VIDEO TOOLS STUDIO</h1>
+                        <p id="header-subtitle" class="text-[11px] text-slate-400 truncate hidden sm:block">Platform Produksi Konten Video AI untuk Kreator</p>
+                    </div>
+                </div>
+
+                <!-- Right Header Controls -->
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <!-- Gemini Engine Status Pill -->
+                    <button onclick="navigateTo('settings')" id="api-status-pill" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#13131f] border border-[#1f1f33] hover:border-cyan-500/40 text-xs font-semibold transition">
+                        <span id="api-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="hidden md:inline text-slate-200" data-i18n="geminiReady">Gemini AI Engine</span>
+                    </button>
+
+                    <!-- Language Toggle -->
+                    <button onclick="toggleLanguage()" class="px-2.5 py-1.5 rounded-xl bg-[#13131f] hover:bg-[#1a1a2b] border border-[#1f1f33] text-xs font-bold text-cyan-300 transition">
+                        <span id="lang-badge">ID / EN</span>
+                    </button>
+
+                    <!-- Projects Shortcut -->
+                    <button onclick="navigateTo('projects')" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#13131f] hover:bg-[#1a1a2b] border border-[#1f1f33] text-xs font-medium text-slate-200 transition">
+                        <i data-lucide="folder-kanban" class="w-4 h-4 text-cyan-400"></i>
+                        <span class="hidden sm:inline" data-i18n="myProjects">My Projects</span>
+                        <span id="project-count-badge" class="px-1.5 py-0.2 rounded-full bg-purple-600/30 text-purple-300 text-[11px] font-bold">0</span>
+                    </button>
+
+                    <!-- User Profile Pill -->
+                    <button onclick="navigateTo('settings')" class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl bg-[#13131f] border border-[#1f1f33] hover:border-purple-500/40 transition">
+                        <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-purple-600 to-blue-500 flex items-center justify-center text-xs font-bold text-white" id="header-avatar">
+                            CR
+                        </div>
+                        <span class="text-xs font-medium text-slate-200 hidden md:inline" id="header-username">Creator Studio</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- CONTENT VIEWPORT -->
+            <main id="main-content" class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+                <!-- Dynamic View Container -->
+            </main>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ============================================================================
+         * AI VIDEO TOOLS STUDIO — CORE ARCHITECTURE & STATE MANAGEMENT
+         * ============================================================================
+         */
+        const STORAGE_KEYS = {
+            PROJECTS: 'aivideo_studio_projects_v1',
+            SETTINGS: 'aivideo_studio_settings_v1',
+            RUNTIME_KEY: 'aivideo_studio_gemini_runtime_key'
+        };
+
+        const defaultSettings = {
+            lang: 'id',
+            profile: {
+                name: 'Creator Studio',
+                niche: 'Tech, Edukasi & Lifestyle'
+            },
+            videoIntegration: {
+                provider: 'none',
+                endpointUrl: ''
+            }
+        };
+
+        function loadSettings() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+                if (!raw) return structuredClone(defaultSettings);
+                const parsed = JSON.parse(raw);
+                return {
+                    ...defaultSettings,
+                    ...parsed,
+                    profile: { ...defaultSettings.profile, ...(parsed.profile || {}) },
+                    videoIntegration: { ...defaultSettings.videoIntegration, ...(parsed.videoIntegration || {}) }
+                };
+            } catch {
+                return structuredClone(defaultSettings);
+            }
+        }
+
+        function loadProjects() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEYS.PROJECTS);
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+
+        const savedSettings = loadSettings();
+
+        const state = {
+            currentTab: 'dashboard',
+            sidebarCollapsed: false,
+            lang: savedSettings.lang,
+            profile: savedSettings.profile,
+            videoIntegration: savedSettings.videoIntegration,
+            projects: loadProjects(),
+            workspace: {
+                lastScript: '',
+                lastScriptData: null,
+                lastStoryboard: []
+            }
+        };
+
+        function persistSettings() {
+            try {
+                localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify({
+                    lang: state.lang,
+                    profile: state.profile,
+                    videoIntegration: state.videoIntegration
+                }));
+            } catch (e) {
+                console.warn('Gagal menyimpan pengaturan lokal:', e);
+            }
+        }
+
+        function persistProjects() {
+            try {
+                localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(state.projects));
+                updateProjectBadge();
+            } catch (e) {
+                console.warn('Gagal menyimpan proyek lokal:', e);
+            }
+        }
+
+        function saveProject(type, title, content) {
+            const newProject = {
+                id: 'proj_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                type,
+                title: title || 'Untitled Project',
+                content: typeof content === 'string' ? content : JSON.stringify(content, null, 2),
+                createdAt: new Date().toISOString()
+            };
+            state.projects.unshift(newProject);
+            persistProjects();
+            showToast(state.lang === 'id' ? 'Berhasil disimpan ke My Projects!' : 'Saved to My Projects!', 'success');
+        }
+
+        function deleteProject(id) {
+            state.projects = state.projects.filter(p => p.id !== id);
+            persistProjects();
+            renderView();
+            showToast(state.lang === 'id' ? 'Proyek dihapus.' : 'Project deleted.', 'info');
+        }
+
+        function updateProjectBadge() {
+            const badge = document.getElementById('project-count-badge');
+            if (badge) badge.textContent = state.projects.length;
+        }
+
+        function updateProfileHeader() {
+            const name = state.profile.name || 'Creator Studio';
+            const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'CR';
+            const avatarEl = document.getElementById('header-avatar');
+            const nameEl = document.getElementById('header-username');
+            if (avatarEl) avatarEl.textContent = initials;
+            if (nameEl) nameEl.textContent = name;
+        }
+
+        // Bilingual Dictionary (Indonesian & English)
+        const i18n = {
+            id: {
+                dashboard: 'Dashboard',
+                scriptGen: 'AI Script Generator',
+                storyboard: 'AI Storyboard',
+                textToVideo: 'Text to Video',
+                imageToVideo: 'Image to Video',
+                voiceOver: 'AI Voice Over',
+                autoSubtitle: 'Auto Subtitle',
+                caption: 'AI Caption & Hashtag',
+                myProjects: 'My Projects',
+                settings: 'Settings',
+                collapseSidebar: 'Tutup Sidebar',
+                backToDashboard: 'Kembali ke Dashboard',
+                geminiReady: 'Gemini AI Engine',
+                heroBadge: 'AI VIDEO TOOLS STUDIO • WORKSPACE',
+                welcomePrefix: 'Selamat Datang Kembali,',
+                heroTitle: 'Produksi Konten Video Viral Lebih Cepat dengan AI',
+                heroDesc: 'Kelola alur produksi video pendek dan panjang Anda—mulai dari naskah terstruktur, storyboard visual, narasi suara, hingga auto subtitle dalam satu studio gelap modern.',
+                createNewVideo: 'Create New Video',
+                viewProjects: 'Lihat My Projects',
+                quickTools: 'Kartu Fitur AI Studio',
+                recentProjects: 'Project Terbaru',
+                noProjectsYet: 'Belum ada project tersimpan. Klik "Create New Video" atau gunakan kartu fitur AI di atas untuk memulai project pertama Anda.',
+                saveToProjects: 'Simpan ke Proyek',
+                copyText: 'Salin Teks',
+                copied: 'Berhasil disalin ke clipboard!',
+                generating: 'Sedang memproses dengan Gemini AI...',
+                sendToStoryboard: 'Kirim ke Storyboard',
+                sendToVoiceOver: 'Kirim ke Voice Over',
+                sendToSubtitle: 'Buat Auto Subtitle',
+                sendToCaption: 'Buat Caption dari Naskah',
+                honestVideoNoticeTitle: 'Status Integrasi Model Video Generatif',
+                honestVideoNoticeDesc: 'Modul rendering video membutuhkan koneksi ke mesin video eksternal (seperti Veo, Kling, atau Runway API). Aplikasi ini tidak akan membuat video palsu jika layanan video belum terhubung.'
+            },
+            en: {
+                dashboard: 'Dashboard',
+                scriptGen: 'AI Script Generator',
+                storyboard: 'AI Storyboard',
+                textToVideo: 'Text to Video',
+                imageToVideo: 'Image to Video',
+                voiceOver: 'AI Voice Over',
+                autoSubtitle: 'Auto Subtitle',
+                caption: 'AI Caption & Hashtag',
+                myProjects: 'My Projects',
+                settings: 'Settings',
+                collapseSidebar: 'Collapse Sidebar',
+                backToDashboard: 'Back to Dashboard',
+                geminiReady: 'Gemini AI Engine',
+                heroBadge: 'AI VIDEO TOOLS STUDIO • WORKSPACE',
+                welcomePrefix: 'Welcome Back,',
+                heroTitle: 'Produce Viral Video Content Faster with AI',
+                heroDesc: 'Manage your short-form and long-form video production workflow—from structured scripts, visual storyboards, voice overs, to auto subtitles in one dark studio.',
+                createNewVideo: 'Create New Video',
+                viewProjects: 'View My Projects',
+                quickTools: 'AI Studio Feature Cards',
+                recentProjects: 'Recent Projects',
+                noProjectsYet: 'No saved projects yet. Click "Create New Video" or select an AI feature card above to start your first project.',
+                saveToProjects: 'Save to Projects',
+                copyText: 'Copy Text',
+                copied: 'Copied to clipboard!',
+                generating: 'Generating with Gemini AI...',
+                sendToStoryboard: 'Send to Storyboard',
+                sendToVoiceOver: 'Send to Voice Over',
+                sendToSubtitle: 'Generate Auto Subtitle',
+                sendToCaption: 'Generate Caption from Script',
+                honestVideoNoticeTitle: 'Generative Video Engine Status',
+                honestVideoNoticeDesc: 'Video rendering requires an active connection to an external video generation backend (such as Veo, Kling, or Runway API). This studio will never fabricate fake video outputs.'
+            }
+        };
+
+        function t(key) {
+            return i18n[state.lang]?.[key] || i18n['id'][key] || key;
+        }
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const colors = {
+                success: 'bg-emerald-950/90 border-emerald-500/50 text-emerald-100',
+                error: 'bg-rose-950/90 border-rose-500/50 text-rose-100',
+                warning: 'bg-amber-950/90 border-amber-500/50 text-amber-100',
+                info: 'bg-[#13131f]/95 border-purple-500/50 text-slate-100'
+            };
+            const el = document.createElement('div');
+            el.className = `pointer-events-auto px-4 py-3 rounded-xl border backdrop-blur-md text-xs font-semibold shadow-xl transition-all duration-300 ${colors[type] || colors.info}`;
+            el.textContent = message;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(8px)';
+                setTimeout(() => el.remove(), 300);
+            }, 3400);
+        }
+
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast(t('copied'), 'success');
+            } catch {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showToast(t('copied'), 'success');
+            }
+        }
+
+        function renderBackToDashboardBar(badgeText = 'AI STUDIO MODULE') {
+            return `
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+                    <button onclick="navigateTo('dashboard')" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#13131f] hover:bg-[#1b1b2b] border border-[#1f1f33] hover:border-purple-500/40 text-xs font-semibold text-slate-200 transition">
+                        <i data-lucide="arrow-left" class="w-4 h-4 text-cyan-400"></i>
+                        <span>${t('backToDashboard')}</span>
+                    </button>
+                    <span class="text-[11px] font-bold tracking-wider uppercase px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/25 text-purple-300">
+                        ${escapeHtml(badgeText)}
+                    </span>
+                </div>
+            `;
+        }
+
+        /**
+         * ============================================================================
+         * GEMINI API GATEWAY (UNIFIED CLIENT + SERVER-ENDPOINT COMPATIBILITY)
+         * ============================================================================
+         */
+        const GEMINI_TEXT_MODEL = 'gemini-3-flash-preview';
+        const GEMINI_TTS_MODEL = 'gemini-2.5-flash-preview-tts';
+
+        function getActiveGeminiKey() {
+            const envKey = (typeof window !== 'undefined' && window.GEMINI_API_KEY) ? String(window.GEMINI_API_KEY).trim() : '';
+            const sessionKey = sessionStorage.getItem(STORAGE_KEYS.RUNTIME_KEY) || '';
+            return envKey || sessionKey.trim();
+        }
+
+        function updateApiStatusIndicator() {
+            const dot = document.getElementById('api-status-dot');
+            if (!dot) return;
+            const hasKey = Boolean(getActiveGeminiKey());
+            dot.className = hasKey
+                ? 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse'
+                : 'w-2 h-2 rounded-full bg-amber-400';
+        }
+
+        async function callGeminiStructuredScript({ topic, language, duration, style }) {
+            // 1. Coba panggil server-side endpoint /api/generate-script jika berjalan di backend Node.js
+            try {
+                const serverRes = await fetch('/api/generate-script', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic, language, duration, style })
+                });
+
+                if (serverRes.ok) {
+                    return await serverRes.json();
+                }
+
+                // Jika server merespons 503 atau error terstruktur dan tidak ada fallback key di sesi
+                if (serverRes.status !== 404 && serverRes.status !== 405 && !getActiveGeminiKey()) {
+                    const errJson = await serverRes.json().catch(() => ({}));
+                    const err = new Error(errJson.message || `Server mengembalikan status ${serverRes.status}`);
+                    err.code = errJson.code || 'SERVER_ERROR';
+                    throw err;
+                }
+            } catch (networkErr) {
+                if (networkErr.code === 'MISSING_GEMINI_API_KEY' || networkErr.code === 'GEMINI_UPSTREAM_ERROR') {
+                    throw networkErr;
+                }
+            }
+
+            // 2. Fallback langsung ke Gemini API jika berjalan dalam preview browser statis
+            const apiKey = getActiveGeminiKey();
+            if (!apiKey) {
+                const cfgErr = new Error(
+                    state.lang === 'id'
+                        ? 'GEMINI_API_KEY belum dikonfigurasi. Atur GEMINI_API_KEY di environment server atau masukkan kunci sesi Anda pada menu Settings.'
+                        : 'GEMINI_API_KEY is not configured. Set GEMINI_API_KEY in server environment or enter a session key in Settings.'
+                );
+                cfgErr.code = 'MISSING_GEMINI_API_KEY';
+                throw cfgErr;
+            }
+
+            const responseSchema = {
+                type: 'OBJECT',
+                properties: {
+                    videoTitle: { type: 'STRING' },
+                    openingHook: { type: 'STRING' },
+                    narrationScript: { type: 'STRING' },
+                    sceneBreakdown: {
+                        type: 'ARRAY',
+                        items: {
+                            type: 'OBJECT',
+                            properties: {
+                                sceneNumber: { type: 'INTEGER' },
+                                timeRange: { type: 'STRING' },
+                                visual: { type: 'STRING' },
+                                audioNarration: { type: 'STRING' }
+                            },
+                            required: ['sceneNumber', 'timeRange', 'visual', 'audioNarration']
+                        }
+                    },
+                    closingCta: { type: 'STRING' },
+                    caption: { type: 'STRING' },
+                    hashtags: {
+                        type: 'ARRAY',
+                        items: { type: 'STRING' }
+                    }
+                },
+                required: [
+                    'videoTitle',
+                    'openingHook',
+                    'narrationScript',
+                    'sceneBreakdown',
+                    'closingCta',
+                    'caption',
+                    'hashtags'
+                ]
+            };
+
+            const systemInstruction = `You are a professional short-form & long-form video scriptwriter for TikTok, Instagram Reels, and YouTube.
+Generate a complete video production script in ${language}.
+- Topic: ${topic}
+- Duration: ${duration} seconds
+- Style: ${style}
+Ensure the response strictly returns valid JSON matching the schema with:
+1. videoTitle (Judul video)
+2. openingHook (Hook pembuka 3-5 detik pertama)
+3. narrationScript (Naskah narasi lengkap sesuai durasi ${duration} detik)
+4. sceneBreakdown (Pembagian adegan dengan sceneNumber, timeRange, visual, audioNarration)
+5. closingCta (CTA penutup)
+6. caption (Caption media sosial)
+7. hashtags (Daftar 6-10 hashtag relevan diawali #)`;
+
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TEXT_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    systemInstruction: { parts: [{ text: systemInstruction }] },
+                    contents: [{
+                        role: 'user',
+                        parts: [{ text: `Buatkan naskah video berdurasi ${duration} detik bergaya ${style} dalam bahasa ${language} tentang topik: ${topic}` }]
+                    }],
+                    generationConfig: {
+                        responseMimeType: 'application/json',
+                        responseSchema
+                    }
+                })
+            });
+
+            if (!res.ok) {
+                const detail = await res.text();
+                throw new Error(`Gemini API Error (${res.status}): ${detail.slice(0, 180)}`);
+            }
+
+            const data = await res.json();
+            const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!rawText) throw new Error('Respons Gemini API kosong.');
+            return JSON.parse(rawText);
+        }
+
+        async function callGeminiText(prompt, systemPrompt = 'You are an expert AI video creator assistant.', jsonSchema = null) {
+            const apiKey = getActiveGeminiKey();
+            if (!apiKey) {
+                throw new Error(
+                    state.lang === 'id'
+                        ? 'GEMINI_API_KEY belum dikonfigurasi. Silakan masukkan Gemini API Key sesi pada halaman Settings.'
+                        : 'GEMINI_API_KEY is not configured. Please enter a session Gemini API Key in Settings.'
+                );
+            }
+
+            const generationConfig = jsonSchema
+                ? { responseMimeType: 'application/json', responseSchema: jsonSchema }
+                : {};
+
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TEXT_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                    generationConfig
+                })
+            });
+
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(`Gemini API Error (${res.status}): ${errText.slice(0, 180)}`);
+            }
+
+            const json = await res.json();
+            const text = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!text) throw new Error('Gemini API mengembalikan respons kosong.');
+            return text;
+        }
+
+        async function callGeminiTTS(text, voiceName = 'Kore') {
+            const apiKey = getActiveGeminiKey();
+            if (!apiKey) {
+                throw new Error(
+                    state.lang === 'id'
+                        ? 'GEMINI_API_KEY belum dikonfigurasi. Silakan atur kunci API di halaman Settings untuk menjalankan Gemini TTS.'
+                        : 'GEMINI_API_KEY is not configured. Please set your API key in Settings to run Gemini TTS.'
+                );
+            }
+
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TTS_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text }] }],
+                    generationConfig: {
+                        responseModalities: ['AUDIO'],
+                        speechConfig: {
+                            voiceConfig: {
+                                prebuiltVoiceConfig: { voiceName }
+                            }
+                        }
+                    }
+                })
+            });
+
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(`Gemini TTS Error (${res.status}): ${errText.slice(0, 180)}`);
+            }
+
+            const json = await res.json();
+            const inlineData = json?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+            if (!inlineData?.data) {
+                throw new Error('Model TTS tidak mengembalikan data audio.');
+            }
+            return pcmBase64ToWavBlobUrl(inlineData.data, 24000);
+        }
+
+        function pcmBase64ToWavBlobUrl(base64Pcm, sampleRate = 24000) {
+            const binaryString = atob(base64Pcm);
+            const pcmLength = binaryString.length;
+            const wavBuffer = new ArrayBuffer(44 + pcmLength);
+            const view = new DataView(wavBuffer);
+
+            const writeString = (offset, str) => {
+                for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+            };
+
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + pcmLength, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(36, 'data');
+            view.setUint32(40, pcmLength, true);
+
+            const bytes = new Uint8Array(wavBuffer, 44);
+            for (let i = 0; i < pcmLength; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+
+            const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+            return URL.createObjectURL(blob);
+        }
+
+        /**
+         * ============================================================================
+         * NAVIGATION & LAYOUT CONTROLS
+         * ============================================================================
+         */
+        const navItems = [
+            { id: 'dashboard', icon: 'layout-dashboard', labelKey: 'dashboard', badge: null },
+            { id: 'script', icon: 'file-text', labelKey: 'scriptGen', badge: 'AI' },
+            { id: 'storyboard', icon: 'film', labelKey: 'storyboard', badge: 'AI' },
+            { id: 'text2video', icon: 'video', labelKey: 'textToVideo', badge: 'BETA' },
+            { id: 'img2video', icon: 'image-play', labelKey: 'imageToVideo', badge: 'BETA' },
+            { id: 'voiceover', icon: 'mic', labelKey: 'voiceOver', badge: 'TTS' },
+            { id: 'subtitle', icon: 'captions', labelKey: 'autoSubtitle', badge: 'SRT' },
+            { id: 'projects', icon: 'folder-kanban', labelKey: 'myProjects', badge: null },
+            { id: 'settings', icon: 'settings', labelKey: 'settings', badge: null },
+        ];
+
+        function renderSidebar() {
+            const nav = document.getElementById('sidebar-nav');
+            if (!nav) return;
+
+            nav.innerHTML = navItems.map(item => {
+                const active = state.currentTab === item.id;
+                return `
+                    <button onclick="navigateTo('${item.id}')"
+                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 ${
+                            active
+                                ? 'bg-gradient-to-r from-purple-600/25 to-cyan-500/15 border border-purple-500/40 text-white shadow-neon-purple'
+                                : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+                        }">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <i data-lucide="${item.icon}" class="w-4 h-4 shrink-0 ${active ? 'text-cyan-400' : 'text-slate-400'}"></i>
+                            <span class="sidebar-label truncate">${t(item.labelKey)}</span>
+                        </div>
+                        ${item.badge ? `<span class="sidebar-label text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">${item.badge}</span>` : ''}
+                    </button>
+                `;
+            }).join('');
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (key) el.textContent = t(key);
+            });
+            lucide.createIcons();
+        }
+
+        function navigateTo(tabId) {
+            state.currentTab = tabId;
+            toggleMobileSidebar(false);
+            renderSidebar();
+            renderView();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleMobileSidebar(open) {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('mobile-backdrop');
+            if (!sidebar || !backdrop) return;
+            if (open) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+            }
+        }
+
+        function toggleDesktopSidebar() {
+            state.sidebarCollapsed = !state.sidebarCollapsed;
+            const sidebar = document.getElementById('sidebar');
+            const icon = document.getElementById('collapse-icon');
+            if (!sidebar) return;
+
+            if (state.sidebarCollapsed) {
+                sidebar.classList.remove('w-64');
+                sidebar.classList.add('w-20');
+                document.querySelectorAll('.sidebar-label').forEach(el => el.classList.add('hidden'));
+                if (icon) icon.setAttribute('data-lucide', 'panel-left-open');
+            } else {
+                sidebar.classList.remove('w-20');
+                sidebar.classList.add('w-64');
+                document.querySelectorAll('.sidebar-label').forEach(el => el.classList.remove('hidden'));
+                if (icon) icon.setAttribute('data-lucide', 'panel-left-close');
+            }
+            lucide.createIcons();
+        }
+
+        function toggleLanguage() {
+            state.lang = state.lang === 'id' ? 'en' : 'id';
+            persistSettings();
+            renderSidebar();
+            renderView();
+            showToast(state.lang === 'id' ? 'Bahasa diubah ke Indonesia' : 'Language switched to English', 'info');
+        }
+
+        function updateHeaderInfo(title, subtitle) {
+            const titleEl = document.getElementById('header-title');
+            const subEl = document.getElementById('header-subtitle');
+            if (titleEl) titleEl.textContent = title;
+            if (subEl) subEl.textContent = subtitle;
+        }
+
+        /**
+         * ============================================================================
+         * VIEW 1: DASHBOARD OVERVIEW
+         * ============================================================================
+         */
+        function renderDashboardView() {
+            updateHeaderInfo(
+                'AI VIDEO TOOLS STUDIO',
+                state.lang === 'id'
+                    ? 'Dashboard Utama — Platform Produksi Konten Video AI untuk Kreator'
+                    : 'Main Dashboard — AI Video Content Production Platform for Creators'
+            );
+
+            const totalProjects = state.projects.length;
+            const scriptProjectsCount = state.projects.filter(p => p.type.toLowerCase().includes('script')).length;
+            const mediaAssetsCount = state.projects.filter(p => !p.type.toLowerCase().includes('script')).length;
+
+            const tools = [
+                {
+                    id: 'script',
+                    icon: 'file-text',
+                    color: 'from-purple-500 to-indigo-600',
+                    title: 'AI Script Generator',
+                    desc: state.lang === 'id'
+                        ? 'Buat naskah lengkap dengan judul, hook pembuka, narasi, pembagian adegan, CTA, caption & hashtag.'
+                        : 'Generate complete scripts with title, opening hook, narration, scene breakdown, CTA, caption & hashtags.',
+                    status: 'Gemini API Ready'
+                },
+                {
+                    id: 'storyboard',
+                    icon: 'film',
+                    color: 'from-cyan-500 to-blue-600',
+                    title: 'AI Storyboard',
+                    desc: state.lang === 'id'
+                        ? 'Ubah naskah video menjadi daftar adegan terstruktur lengkap dengan durasi, narasi, dan prompt visual.'
+                        : 'Transform video scripts into structured scenes complete with duration, narration, and image prompts.',
+                    status: 'Gemini 3 Flash'
+                },
+                {
+                    id: 'text2video',
+                    icon: 'video',
+                    color: 'from-amber-500 to-orange-600',
+                    title: 'Text to Video',
+                    desc: state.lang === 'id'
+                        ? 'Susun prompt sinematik 9:16, 16:9, atau 1:1 dan hubungkan ke endpoint model video AI.'
+                        : 'Craft cinematic prompts in 9:16, 16:9, or 1:1 and connect to your video AI model endpoint.',
+                    status: state.videoIntegration.provider !== 'none' ? 'Connected' : 'Pipeline Ready'
+                },
+                {
+                    id: 'img2video',
+                    icon: 'image-play',
+                    color: 'from-sky-500 to-indigo-500',
+                    title: 'Image to Video',
+                    desc: state.lang === 'id'
+                        ? 'Unggah gambar referensi, atur instruksi gerakan kamera, dan validasi spesifikasi animasi AI.'
+                        : 'Upload reference frames, define camera motion prompts, and validate AI animation specifications.',
+                    status: state.videoIntegration.provider !== 'none' ? 'Connected' : 'Pipeline Ready'
+                },
+                {
+                    id: 'voiceover',
+                    icon: 'mic',
+                    color: 'from-fuchsia-500 to-purple-600',
+                    title: 'AI Voice Over',
+                    desc: state.lang === 'id'
+                        ? 'Ubah teks narasi menjadi audio sulih suara (TTS) jernih dengan berbagai pilihan karakter vokal.'
+                        : 'Transform narration text into crisp speech audio with multiple vocal personas.',
+                    status: 'Gemini TTS'
+                },
+                {
+                    id: 'subtitle',
+                    icon: 'captions',
+                    color: 'from-emerald-500 to-teal-600',
+                    title: 'Auto Subtitle',
+                    desc: state.lang === 'id'
+                        ? 'Buat subtitle otomatis berstempel waktu (SRT / VTT) siap pakai untuk TikTok, Reels, dan YouTube.'
+                        : 'Generate timestamped subtitles (SRT / VTT) ready for TikTok, Instagram Reels, and YouTube.',
+                    status: 'SRT / VTT AI'
+                }
+            ];
+
+            const recentHtml = state.projects.length === 0
+                ? `<div class="p-8 text-center rounded-2xl bg-[#0e0e16] border border-dashed border-[#1f1f33] space-y-3">
+                        <div class="w-11 h-11 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mx-auto">
+                            <i data-lucide="folder-open" class="w-5 h-5"></i>
+                        </div>
+                        <p class="text-xs sm:text-sm font-medium text-slate-300 max-w-md mx-auto">${t('noProjectsYet')}</p>
+                        <div>
+                            <button onclick="navigateTo('script')" class="neon-btn px-4 py-2 rounded-xl text-xs font-bold text-white inline-flex items-center gap-1.5">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                <span>${t('createNewVideo')}</span>
+                            </button>
+                        </div>
+                   </div>`
+                : `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    ${state.projects.slice(0, 6).map(p => `
+                        <div class="p-4 rounded-2xl bg-[#13131f] border border-[#1f1f33] hover:border-purple-500/40 transition flex flex-col justify-between gap-3">
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-2">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-purple-500/15 text-purple-300">${escapeHtml(p.type)}</span>
+                                    <span class="text-[11px] text-slate-500">${new Date(p.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                <h4 class="font-bold text-sm text-white line-clamp-1">${escapeHtml(p.title)}</h4>
+                                <p class="text-xs text-slate-400 mt-1 line-clamp-2">${escapeHtml(p.content)}</p>
+                            </div>
+                            <div class="flex items-center justify-between pt-2 border-t border-white/5">
+                                <button onclick="copyToClipboard(${JSON.stringify(p.content)})" class="text-xs text-cyan-400 hover:text-cyan-300 font-medium flex items-center gap-1">
+                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
+                                </button>
+                                <button onclick="navigateTo('projects')" class="text-xs text-slate-400 hover:text-white">Detail →</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                   </div>`;
+
+            return `
+                <div class="space-y-8">
+                    <!-- Welcome Hero & Primary CTA -->
+                    <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#141026] via-[#0d0e1d] to-[#081320] border border-purple-500/30 p-6 sm:p-8 lg:p-10 shadow-neon-purple">
+                        <div class="absolute -top-24 -right-24 w-72 h-72 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+                        <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+                        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                            <div class="max-w-2xl space-y-3">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[11px] font-bold tracking-wider">
+                                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                    <span>${t('heroBadge')}</span>
+                                </div>
+                                <p class="text-xs sm:text-sm font-semibold text-cyan-300">
+                                    ${t('welcomePrefix')} <span class="text-white font-bold">${escapeHtml(state.profile.name)}</span>
+                                </p>
+                                <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                                    ${t('heroTitle')}
+                                </h2>
+                                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                    ${t('heroDesc')}
+                                </p>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
+                                <button onclick="navigateTo('script')" class="neon-btn px-6 py-3.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 shadow-lg">
+                                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                                    <span>${t('createNewVideo')}</span>
+                                </button>
+                                <button onclick="navigateTo('projects')" class="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs sm:text-sm font-semibold text-slate-200 flex items-center justify-center gap-2 transition">
+                                    <i data-lucide="folder-kanban" class="w-4 h-4 text-cyan-400"></i>
+                                    <span>${t('viewProjects')} (${totalProjects})</span>
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Real Project Summary Cards (Zero Fake Statistics) -->
+                    <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div onclick="navigateTo('projects')" class="cursor-pointer rounded-2xl bg-[#13131f] hover:bg-[#171726] border border-[#1f1f33] hover:border-purple-500/40 p-5 flex items-center justify-between transition">
+                            <div>
+                                <span class="text-xs font-semibold text-slate-400 block">${state.lang === 'id' ? 'Total Project Tersimpan' : 'Total Saved Projects'}</span>
+                                <span class="text-2xl font-extrabold text-white mt-1 block">${totalProjects}</span>
+                                <span class="text-[11px] text-slate-500 mt-0.5 block">${state.lang === 'id' ? 'Penyimpanan Lokal Browser' : 'Local Browser Storage'}</span>
+                            </div>
+                            <div class="w-11 h-11 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                                <i data-lucide="folder-kanban" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+
+                        <div onclick="navigateTo('script')" class="cursor-pointer rounded-2xl bg-[#13131f] hover:bg-[#171726] border border-[#1f1f33] hover:border-cyan-500/40 p-5 flex items-center justify-between transition">
+                            <div>
+                                <span class="text-xs font-semibold text-slate-400 block">${state.lang === 'id' ? 'Naskah Video Dibuat' : 'Video Scripts Created'}</span>
+                                <span class="text-2xl font-extrabold text-white mt-1 block">${scriptProjectsCount}</span>
+                                <span class="text-[11px] text-cyan-400 mt-0.5 block">AI Script Generator</span>
+                            </div>
+                            <div class="w-11 h-11 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                                <i data-lucide="file-text" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+
+                        <div onclick="navigateTo('storyboard')" class="cursor-pointer rounded-2xl bg-[#13131f] hover:bg-[#171726] border border-[#1f1f33] hover:border-indigo-500/40 p-5 flex items-center justify-between transition">
+                            <div>
+                                <span class="text-xs font-semibold text-slate-400 block">${state.lang === 'id' ? 'Aset Storyboard & Subtitle' : 'Storyboard & Subtitle Assets'}</span>
+                                <span class="text-2xl font-extrabold text-white mt-1 block">${mediaAssetsCount}</span>
+                                <span class="text-[11px] text-slate-500 mt-0.5 block">Storyboard • Subtitle • Prompt</span>
+                            </div>
+                            <div class="w-11 h-11 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                                <i data-lucide="layers" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 6 Interactive Feature Cards -->
+                    <section class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                                <i data-lucide="cpu" class="w-5 h-5 text-purple-400"></i>
+                                <span>${t('quickTools')}</span>
+                            </h3>
+                            <span class="text-xs text-slate-400">6 AI Video Tools</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                            ${tools.map(tool => `
+                                <div onclick="navigateTo('${tool.id}')" class="group cursor-pointer rounded-2xl bg-[#13131f] hover:bg-[#171726] border border-[#1f1f33] hover:border-purple-500/50 p-5 transition-all duration-200 flex flex-col justify-between gap-4 hover:shadow-neon-purple">
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <div class="w-11 h-11 rounded-xl bg-gradient-to-br ${tool.color} flex items-center justify-center shadow-lg">
+                                                <i data-lucide="${tool.icon}" class="w-5 h-5 text-white"></i>
+                                            </div>
+                                            <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300">
+                                                ${tool.status}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-base font-bold text-white group-hover:text-cyan-300 transition">${tool.title}</h4>
+                                            <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">${tool.desc}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center text-xs font-semibold text-purple-400 group-hover:text-cyan-400 transition pt-2 border-t border-white/5">
+                                        <span>${state.lang === 'id' ? 'Buka Fitur' : 'Open Tool'}</span>
+                                        <i data-lucide="arrow-right" class="w-4 h-4 ml-1.5 group-hover:translate-x-1 transition-transform"></i>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </section>
+
+                    <!-- Recent Projects -->
+                    <section class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                                <i data-lucide="clock" class="w-5 h-5 text-cyan-400"></i>
+                                <span>${t('recentProjects')}</span>
+                            </h3>
+                            <button onclick="navigateTo('projects')" class="text-xs font-semibold text-purple-400 hover:text-purple-300">
+                                ${state.lang === 'id' ? 'Lihat Semua →' : 'View All →'}
+                            </button>
+                        </div>
+                        ${recentHtml}
+                    </section>
+                </div>
+            `;
+        }
+
+        /**
+         * ============================================================================
+         * VIEW 2: AI SCRIPT GENERATOR (PRIORITY FUNCTIONAL FEATURE)
+         * ============================================================================
+         */
+        function formatStructuredScriptToText(data) {
+            if (!data) return '';
+            const scenesText = (data.sceneBreakdown || [])
+                .map(s => `[Scene ${s.sceneNumber} | ${s.timeRange}]\nVisual: ${s.visual}\nNarasi: ${s.audioNarration}`)
+                .join('\n\n');
+            const tagsText = Array.isArray(data.hashtags) ? data.hashtags.join(' ') : '';
+            return `JUDUL VIDEO:\n${data.videoTitle}\n\nHOOK PEMBUKA:\n${data.openingHook}\n\nNASKAH NARASI:\n${data.narrationScript}\n\nPEMBAGIAN ADEGAN:\n${scenesText}\n\nCTA PENUTUP:\n${data.closingCta}\n\nCAPTION:\n${data.caption}\n\nHASHTAG:\n${tagsText}`;
+        }
+
+        function renderStructuredScriptCards(data) {
+            const fullText = formatStructuredScriptToText(data);
+            return `
+                <div class="space-y-4">
+                    <!-- Action Header -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/10">
+                        <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                            <span>${state.lang === 'id' ? 'Naskah Terstruktur Siap Produksi' : 'Structured Production Script Ready'}</span>
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="copyToClipboard(${JSON.stringify(fullText)})" class="px-3 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/35 text-xs font-bold text-cyan-200 flex items-center gap-1.5 transition">
+                                <i data-lucide="copy" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                <span>Copy Script</span>
+                            </button>
+                            <button onclick="saveProject('AI Script', ${JSON.stringify(data.videoTitle || 'AI Video Script')}, ${JSON.stringify(fullText)})" class="px-3 py-1.5 rounded-lg bg-purple-600/25 hover:bg-purple-600/35 border border-purple-500/40 text-xs font-bold text-purple-200 flex items-center gap-1.5 transition">
+                                <i data-lucide="bookmark-plus" class="w-3.5 h-3.5"></i>
+                                <span>${t('saveToProjects')}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 1. Judul Video -->
+                    <div class="p-4 rounded-xl bg-[#0a0a12] border border-[#1f1f33]">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-purple-400 block mb-1">1. ${state.lang === 'id' ? 'Judul Video' : 'Video Title'}</span>
+                        <h4 class="text-base font-extrabold text-white">${escapeHtml(data.videoTitle)}</h4>
+                    </div>
+
+                    <!-- 2. Hook Pembuka -->
+                    <div class="p-4 rounded-xl bg-gradient-to-r from-purple-950/30 to-cyan-950/20 border border-purple-500/30">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-cyan-400 block mb-1">2. ${state.lang === 'id' ? 'Hook Pembuka (3-5 Detik Pertama)' : 'Opening Hook (First 3-5s)'}</span>
+                        <p class="text-sm font-semibold text-white leading-relaxed">"${escapeHtml(data.openingHook)}"</p>
+                    </div>
+
+                    <!-- 3. Naskah Narasi -->
+                    <div class="p-4 rounded-xl bg-[#0a0a12] border border-[#1f1f33]">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1.5">3. ${state.lang === 'id' ? 'Naskah Narasi Lengkap' : 'Full Narration Script'}</span>
+                        <p class="text-xs sm:text-sm text-slate-200 whitespace-pre-line leading-relaxed">${escapeHtml(data.narrationScript)}</p>
+                    </div>
+
+                    <!-- 4. Pembagian Adegan -->
+                    <div class="p-4 rounded-xl bg-[#0a0a12] border border-[#1f1f33] space-y-2.5">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 block">4. ${state.lang === 'id' ? 'Pembagian Adegan (Scene Breakdown)' : 'Scene Breakdown'}</span>
+                        <div class="space-y-2">
+                            ${(data.sceneBreakdown || []).map(sc => `
+                                <div class="p-3 rounded-lg bg-[#13131f] border border-white/5 text-xs space-y-1">
+                                    <div class="flex items-center justify-between font-bold text-purple-300">
+                                        <span>Scene #${sc.sceneNumber}</span>
+                                        <span class="text-cyan-400 font-mono">${escapeHtml(sc.timeRange)}</span>
+                                    </div>
+                                    <p class="text-slate-300"><strong class="text-slate-400">Visual:</strong> ${escapeHtml(sc.visual)}</p>
+                                    <p class="text-slate-200"><strong class="text-slate-400">Audio:</strong> ${escapeHtml(sc.audioNarration)}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- 5. CTA Penutup -->
+                    <div class="p-4 rounded-xl bg-[#0a0a12] border border-[#1f1f33]">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 block mb-1">5. ${state.lang === 'id' ? 'CTA Penutup (Call To Action)' : 'Closing CTA'}</span>
+                        <p class="text-xs sm:text-sm font-medium text-emerald-100">${escapeHtml(data.closingCta)}</p>
+                    </div>
+
+                    <!-- 6 & 7. Caption & Hashtag -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="p-4 rounded-xl bg-[#0a0a12] border border-[#1f1f33]">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-400 block mb-1">6. Caption Media Sosial</span>
+                            <p class="text-xs text-slate-200 whitespace-pre-line leading-relaxed">${escapeHtml(data.caption)}</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-[#0a0a12] border border-[#1f1f33]">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-pink-400 block mb-1.5">7. Hashtag</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${(data.hashtags || []).map(tag => `
+                                    <span class="px-2 py-0.5 rounded-md bg-purple-500/15 border border-purple-500/25 text-[11px] font-medium text-purple-200">${escapeHtml(tag)}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderScriptGeneratorView() {
+            updateHeaderInfo(
+                'AI Script Generator',
+                state.lang === 'id'
+                    ? 'Buat naskah video terstruktur dengan hook kuat untuk TikTok, Reels & YouTube'
+                    : 'Create structured video scripts with strong hooks for TikTok, Reels & YouTube'
+            );
+
+            return `
+                ${renderBackToDashboardBar('AI Script Generator • Gemini API')}
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- Left Control Panel -->
+                    <div class="lg:col-span-5 rounded-2xl bg-[#13131f] border border-[#1f1f33] p-5 sm:p-6 space-y-4 h-fit">
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-semibold text-slate-300">
+                                ${state.lang === 'id' ? 'Topik atau Ide Video *' : 'Video Topic or Idea *'}
+                            </label>
+                            <textarea id="script-topic" rows="3"
+                                placeholder="${state.lang === 'id' ? 'Contoh: 5 cara menggunakan AI untuk menghemat waktu editing video hingga 80%...' : 'Example: 5 ways to use AI to cut video editing time by 80%...'}"
+                                class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] focus:border-purple-500 p-3 text-sm text-white placeholder-slate-500 outline-none"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-semibold text-slate-300">
+                                    ${state.lang === 'id' ? 'Bahasa Naskah' : 'Script Language'}
+                                </label>
+                                <select id="script-lang" class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] p-3 text-xs font-medium text-white outline-none">
+                                    <option value="Indonesian">Bahasa Indonesia</option>
+                                    <option value="English">English</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-semibold text-slate-300">
+                                    ${state.lang === 'id' ? 'Durasi Video' : 'Video Duration'}
+                                </label>
+                                <select id="script-duration" class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] p-3 text-xs font-medium text-white outline-none">
+                                    <option value="30">30 ${state.lang === 'id' ? 'Detik' : 'Seconds'} (Short / Reels)</option>
+                                    <option value="60" selected>60 ${state.lang === 'id' ? 'Detik' : 'Seconds'} (TikTok / Shorts)</option>
+                                    <option value="90">90 ${state.lang === 'id' ? 'Detik' : 'Seconds'} (Deep Dive)</option>
+                                    <option value="180">180 ${state.lang === 'id' ? 'Detik' : 'Seconds'} (YouTube Mini)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-semibold text-slate-300">
+                                ${state.lang === 'id' ? 'Gaya Penyampaian' : 'Content Style'}
+                            </label>
+                            <div class="grid grid-cols-2 gap-2" id="script-style-group">
+                                ${['edukasi', 'storytelling', 'hiburan', 'promosi'].map((st, idx) => `
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="script-style" value="${st}" class="peer sr-only" ${idx === 0 ? 'checked' : ''}>
+                                        <div class="px-3 py-2.5 rounded-xl bg-[#0a0a12] border border-[#1f1f33] peer-checked:border-purple-500 peer-checked:bg-purple-500/15 text-xs font-semibold text-slate-300 peer-checked:text-white capitalize text-center transition">
+                                            ${st}
+                                        </div>
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <button id="btn-generate-script" onclick="handleGenerateScript()" class="w-full neon-btn py-3.5 px-5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 shadow-lg">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                            <span>Generate Script</span>
+                        </button>
+                    </div>
+
+                    <!-- Right Output Viewport -->
+                    <div class="lg:col-span-7 space-y-4">
+                        <div id="script-output-container" class="rounded-2xl bg-[#13131f] border border-[#1f1f33] p-5 sm:p-6 min-h-[380px]">
+                            ${state.workspace.lastScriptData
+                                ? renderStructuredScriptCards(state.workspace.lastScriptData)
+                                : `<div class="h-full min-h-[320px] flex flex-col items-center justify-center text-center p-6">
+                                        <div class="w-12 h-12 rounded-2xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 mb-3">
+                                            <i data-lucide="file-text" class="w-6 h-6"></i>
+                                        </div>
+                                        <h3 class="text-sm font-bold text-white">${state.lang === 'id' ? 'Hasil Naskah AI Akan Muncul di Sini' : 'Generated AI Script Will Appear Here'}</h3>
+                                        <p class="text-xs text-slate-400 max-w-md mt-1.5 leading-relaxed">${state.lang === 'id' ? 'Masukkan topik video, pilih bahasa, durasi (30–180 detik), dan gaya konten lalu klik Generate Script.' : 'Enter your video topic, select language, duration (30–180s), and content style then click Generate Script.'}</p>
+                                   </div>`
+                            }
+                        </div>
+
+                        <!-- Cross-Tool Workflow Bar -->
+                        <div id="script-pipeline-bar" class="${state.workspace.lastScriptData ? 'flex' : 'hidden'} flex-wrap items-center gap-2 p-4 rounded-2xl bg-[#13131f] border border-[#1f1f33]">
+                            <span class="text-[11px] font-semibold text-slate-400 mr-1">Next Step:</span>
+                            <button onclick="transferScriptTo('storyboard')" class="px-3 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-xs font-semibold text-cyan-300 flex items-center gap-1.5 transition">
+                                <i data-lucide="film" class="w-3.5 h-3.5"></i>
+                                <span>${t('sendToStoryboard')}</span>
+                            </button>
+                            <button onclick="transferScriptTo('voiceover')" class="px-3 py-1.5 rounded-lg bg-fuchsia-500/15 hover:bg-fuchsia-500/25 border border-fuchsia-500/30 text-xs font-semibold text-fuchsia-300 flex items-center gap-1.5 transition">
+                                <i data-lucide="mic" class="w-3.5 h-3.5"></i>
+                                <span>${t('sendToVoiceOver')}</span>
+                            </button>
+                            <button onclick="transferScriptTo('subtitle')" class="px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-xs font-semibold text-emerald-300 flex items-center gap-1.5 transition">
+                                <i data-lucide="captions" class="w-3.5 h-3.5"></i>
+                                <span>${t('sendToSubtitle')}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function handleGenerateScript() {
+            const topic = document.getElementById('script-topic')?.value.trim();
+            const language = document.getElementById('script-lang')?.value || 'Indonesian';
+            const duration = document.getElementById('script-duration')?.value || '60';
+            const style = document.querySelector('input[name="script-style"]:checked')?.value || 'edukasi';
+
+            if (!topic) {
+                showToast(state.lang === 'id' ? 'Mohon masukkan topik video terlebih dahulu.' : 'Please enter a video topic first.', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('btn-generate-script');
+            const outputBox = document.getElementById('script-output-container');
+            const pipelineBar = document.getElementById('script-pipeline-bar');
+
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>${t('generating')}</span>`;
+            outputBox.innerHTML = `
+                <div class="min-h-[320px] flex flex-col items-center justify-center text-center p-6 animate-neon-border rounded-xl">
+                    <i data-lucide="loader-2" class="w-9 h-9 text-purple-400 animate-spin mb-3"></i>
+                    <p class="text-sm font-bold text-white">${t('generating')}</p>
+                    <p class="text-xs text-slate-400 mt-1">${state.lang === 'id' ? 'Menyusun hook, narasi, adegan, CTA & hashtag...' : 'Structuring hook, narration, scenes, CTA & hashtags...'}</p>
+                </div>
+            `;
+            lucide.createIcons();
+
+            try {
+                const structured = await callGeminiStructuredScript({ topic, language, duration, style });
+                state.workspace.lastScriptData = structured;
+                state.workspace.lastScript = formatStructuredScriptToText(structured);
+                if (Array.isArray(structured.sceneBreakdown)) {
+                    state.workspace.lastStoryboard = structured.sceneBreakdown.map(s => ({
+                        sceneNumber: s.sceneNumber,
+                        duration: s.timeRange,
+                        narration: s.audioNarration,
+                        visualDescription: s.visual,
+                        imagePrompt: `Cinematic vertical 9:16 shot, ${s.visual}, dramatic studio lighting, ultra detailed, 8k`
+                    }));
+                }
+
+                outputBox.innerHTML = renderStructuredScriptCards(structured);
+                if (pipelineBar) {
+                    pipelineBar.classList.remove('hidden');
+                    pipelineBar.classList.add('flex');
+                }
+                showToast(state.lang === 'id' ? 'Naskah video berhasil dibuat!' : 'Video script generated successfully!', 'success');
+            } catch (err) {
+                const isMissingKey = err.code === 'MISSING_GEMINI_API_KEY';
+                outputBox.innerHTML = `
+                    <div class="p-5 rounded-xl bg-rose-950/35 border border-rose-500/40 space-y-3">
+                        <div class="flex items-center gap-2 text-rose-300 font-bold text-sm">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0"></i>
+                            <span>${isMissingKey ? 'Konfigurasi GEMINI_API_KEY Diperlukan' : 'Gagal Memproses Permintaan Gemini API'}</span>
+                        </div>
+                        <p class="text-xs text-rose-200 leading-relaxed">${escapeHtml(err.message)}</p>
+                        ${isMissingKey ? `
+                            <div class="p-3 rounded-lg bg-black/40 border border-white/10 text-xs text-slate-300 space-y-1.5">
+                                <p class="font-bold text-white">Cara Mengaktifkan Gemini API:</p>
+                                <p>1. Dapatkan API Key gratis dari <strong>Google AI Studio</strong>.</p>
+                                <p>2. Klik tombol di bawah untuk mengatur kunci sesi pada halaman <strong>Settings</strong> (tanpa mengaktifkan billing berbayar).</p>
+                                <button onclick="navigateTo('settings')" class="mt-2 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs inline-flex items-center gap-1.5">
+                                    <i data-lucide="settings" class="w-3.5 h-3.5"></i> Buka Settings Konfigurasi API
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4"></i><span>Generate Script</span>`;
+                lucide.createIcons();
+            }
+        }
+
+        function transferScriptTo(targetTab) {
+            if ((targetTab === 'voiceover' || targetTab === 'subtitle') && state.workspace.lastScriptData?.narrationScript) {
+                state.workspace.lastScript = state.workspace.lastScriptData.narrationScript;
+            } else if (state.workspace.lastScriptData) {
+                state.workspace.lastScript = formatStructuredScriptToText(state.workspace.lastScriptData);
+            }
+            navigateTo(targetTab);
+        }
+
+        /**
+         * ============================================================================
+         * VIEW 3: AI STORYBOARD
+         * ============================================================================
+         */
+        function renderStoryboardView() {
+            updateHeaderInfo(
+                'AI Storyboard',
+                state.lang === 'id'
+                    ? 'Ubah naskah menjadi daftar adegan dengan deskripsi visual, durasi, narasi & prompt gambar'
+                    : 'Transform scripts into structured scenes with visual descriptions, duration, narration & image prompts'
+            );
+
+            return `
+                ${renderBackToDashboardBar('AI Storyboard • Scene Planner')}
+                <div class="space-y-6">
+                    <div class="rounded-2xl bg-[#13131f] border border-[#1f1f33] p-5 sm:p-6 space-y-4">
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-semibold text-slate-300">
+                                ${state.lang === 'id' ? 'Naskah Video untuk Dipecah Menjadi Adegan *' : 'Video Script to Split into Scenes *'}
+                            </label>
+                            <textarea id="storyboard-script-input" rows="4"
+                                placeholder="${state.lang === 'id' ? 'Tempel naskah video Anda di sini atau kirim langsung dari AI Script Generator...' : 'Paste your video script here or send directly from AI Script Generator...'}"
+                                class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] focus:border-cyan-500 p-3 text-sm text-white placeholder-slate-500 outline-none">${escapeHtml(state.workspace.lastScript)}</textarea>
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <button id="btn-generate-storyboard" onclick="handleGenerateStoryboard()" class="neon-btn px-5 py-3 rounded-xl text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+                                <i data-lucide="film" class="w-4 h-4"></i>
+                                <span>${state.lang === 'id' ? 'Generate AI Storyboard' : 'Generate AI Storyboard'}</span>
+                            </button>
+
+                            ${state.workspace.lastStoryboard.length > 0 ? `
+                                <button onclick="saveProject('AI Storyboard', 'Storyboard (${state.workspace.lastStoryboard.length} Scenes)', ${JSON.stringify(JSON.stringify(state.workspace.lastStoryboard, null, 2))})" class="px-4 py-2.5 rounded-xl bg-purple-600/25 border border-purple-500/40 text-xs font-bold text-purple-200 flex items-center gap-1.5">
+                                    <i data-lucide="bookmark-plus" class="w-4 h-4"></i>
+                                    <span>${t('saveToProjects')}</span>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <div id="storyboard-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${state.workspace.lastStoryboard.length > 0
+                            ? renderStoryboardCards(state.workspace.lastStoryboard)
+                            : `<div class="md:col-span-2 rounded-2xl bg-[#13131f] border border-dashed border-[#1f1f33] p-10 text-center">
+                                    <p class="text-xs text-slate-400">${state.lang === 'id' ? 'Belum ada adegan storyboard. Masukkan naskah di atas lalu klik Generate AI Storyboard.' : 'No storyboard scenes yet. Enter a script above and click Generate AI Storyboard.'}</p>
+                               </div>`
+                        }
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStoryboardCards(scenes) {
+            return scenes.map((sc, idx) => `
+                <div class="rounded-2xl bg-[#13131f] border border-[#1f1f33] p-5 space-y-3 flex flex-col justify-between">
+                    <div class="space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-1 rounded-lg bg-cyan-500/15 text-cyan-300 text-xs font-extrabold">Scene #${sc.sceneNumber || idx + 1}</span>
+                            <span class="text-xs font-mono text-purple-300 bg-purple-500/15 px-2.5 py-0.5 rounded-md">${escapeHtml(sc.duration || '5s')}</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-slate-400 block">Visual Description</span>
+                            <p class="text-xs text-slate-200 mt-0.5 leading-relaxed">${escapeHtml(sc.visualDescription)}</p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-slate-400 block">Narasi / Voice Over</span>
+                            <p class="text-xs text-white font-medium mt-0.5 leading-relaxed">"${escapeHtml(sc.narration)}"</p>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-white/5 space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase text-amber-400">AI Image Prompt</span>
+                            <button onclick="copyToClipboard(${JSON.stringify(sc.imagePrompt || '')})" class="text-[11px] text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1">
+                                <i data-lucide="copy" class="w-3 h-3"></i> Copy Prompt
+                            </button>
+                        </div>
+                        <p class="text-[11px] font-mono text-slate-300 bg-[#0a0a12] p-2.5 rounded-lg border border-[#1f1f33]">${escapeHtml(sc.imagePrompt)}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function handleGenerateStoryboard() {
+            const scriptInput = document.getElementById('storyboard-script-input')?.value.trim();
+            if (!scriptInput) {
+                showToast(state.lang === 'id' ? 'Masukkan naskah terlebih dahulu.' : 'Please enter a script first.', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('btn-generate-storyboard');
+            const grid = document.getElementById('storyboard-grid');
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>${t('generating')}</span>`;
+            grid.innerHTML = `<div class="md:col-span-2 p-10 rounded-2xl bg-[#13131f] border border-cyan-500/30 text-center"><i data-lucide="loader-2" class="w-8 h-8 text-cyan-400 animate-spin mx-auto mb-2"></i><p class="text-xs font-bold text-white">${t('generating')}</p></div>`;
+            lucide.createIcons();
+
+            const schema = {
+                type: 'ARRAY',
+                items: {
+                    type: 'OBJECT',
+                    properties: {
+                        sceneNumber: { type: 'INTEGER' },
+                        duration: { type: 'STRING' },
+                        visualDescription: { type: 'STRING' },
+                        narration: { type: 'STRING' },
+                        imagePrompt: { type: 'STRING' }
+                    },
+                    required: ['sceneNumber', 'duration', 'visualDescription', 'narration', 'imagePrompt']
+                }
+            };
+
+            try {
+                const raw = await callGeminiText(
+                    `Break down this video script into detailed visual storyboard scenes. Include sceneNumber, duration (e.g., "0:00 - 0:05"), visualDescription, narration, and a detailed English imagePrompt for AI image/video generation.\n\nScript:\n${scriptInput}`,
+                    'You are a professional film director and storyboard artist.',
+                    schema
+                );
+                const scenes = JSON.parse(raw);
+                state.workspace.lastStoryboard = scenes;
+                grid.innerHTML = renderStoryboardCards(scenes);
+                showToast(state.lang === 'id' ? 'Storyboard berhasil dibuat!' : 'Storyboard generated!', 'success');
+            } catch (err) {
+                grid.innerHTML = `<div class="md:col-span-2 p-4 rounded-xl bg-rose-950/40 border border-rose-500/40 text-xs text-rose-200">${escapeHtml(err.message)}</div>`;
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="film" class="w-4 h-4"></i><span>${state.lang === 'id' ? 'Generate AI Storyboard' : 'Generate AI Storyboard'}</span>`;
+                lucide.createIcons();
+            }
+        }
+
+        /**
+         * ============================================================================
+         * VIEW 4: TEXT TO VIDEO (HONEST INTEGRATION ARCHITECTURE)
+         * ============================================================================
+         */
+        function renderTextToVideoView() {
+            updateHeaderInfo(
+                'Text to Video',
+                state.lang === 'id'
+                    ? 'Siapkan prompt generasi video AI & integrasi ke engine rendering video eksternal'
+                    : 'Prepare AI video generation prompts & integrate with external video rendering engines'
+            );
+
+            const isConnected = state.videoIntegration.provider !== 'none' && state.videoIntegration.endpointUrl.trim() !== '';
+
+            return `
+                ${renderBackToDashboardBar('Text to Video • Prompt & Engine')}
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-6 rounded-2xl bg-[#13131f] border border-[#1f1f33] p-5 sm:p-6 space-y-4">
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-semibold text-slate-300">Prompt Video Sinematik *</label>
+                            <textarea id="t2v-prompt" rows="4"
+                                placeholder="Contoh: Tracking shot kamera sinematik melewati jalanan cyberpunk Jakarta di malam hari dengan lampu neon ungu dan biru..."
+                                class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] focus:border-purple-500 p-3 text-sm text-white placeholder-slate-500 outline-none"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-semibold text-slate-300">Aspect Ratio</label>
+                                <select id="t2v-ratio" class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] p-3 text-xs font-medium text-white outline-none">
+                                    <option value="9:16">9:16 (TikTok / Reels / Shorts)</option>
+                                    <option value="16:9">16:9 (YouTube Widescreen)</option>
+                                    <option value="1:1">1:1 (Instagram Feed)</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-semibold text-slate-300">Durasi Klip</label>
+                                <select id="t2v-duration" class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] p-3 text-xs font-medium text-white outline-none">
+                                    <option value="5s">5 Detik</option>
+                                    <option value="8s">8 Detik</option>
+                                    <option value="10s">10 Detik</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button onclick="handlePrepareTextToVideo()" class="w-full neon-btn py-3.5 px-5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2">
+                            <i data-lucide="video" class="w-4 h-4"></i>
+                            <span>${isConnected ? 'Kirim Job ke Video AI Engine' : 'Validasi Prompt & Cek Koneksi Video AI'}</span>
+                        </button>
+                    </div>
+
+                    <div class="lg:col-span-6 space-y-4">
+                        <div class="rounded-2xl bg-amber-950/25 border border-amber-500/35 p-5 space-y-2">
+                            <div class="flex items-center gap-2 text-amber-300 font-bold text-xs">
+                                <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                                <span>${t('honestVideoNoticeTitle')}</span>
+                            </div>
+                            <p class="text-xs text-amber-100/80 leading-relaxed">${t('honestVideoNoticeDesc')}</p>
+                        </div>
+
+                        <div id="t2v-status-box" class="rounded-2xl bg-[#13131f] border border-[#1f1f33] p-5 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-white">Status Endpoint Video AI</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${isConnected ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-700/50 text-slate-300'}">
+                                    ${isConnected ? `Terhubung (${escapeHtml(state.videoIntegration.provider)})` : 'Belum Terhubung'}
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-400 leading-relaxed">
+                                ${isConnected
+                                    ? `Endpoint aktif: ${escapeHtml(state.videoIntegration.endpointUrl)}`
+                                    : 'Anda dapat menghubungkan endpoint model video AI (Veo / Kling / Runway / Custom Webhook) melalui menu Settings.'}
+                            </p>
+                            <button onclick="navigateTo('settings')" class="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-cyan-300">
+                                Konfigurasi Integrasi Video →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handlePrepareTextToVideo() {
+            const prompt = document.getElementById('t2v-prompt')?.value.trim();
+            const ratio = document.getElementById('t2v-ratio')?.value;
+            const duration = document.getElementById('t2v-duration')?.value;
+            const statusBox = document.getElementById('t2v-status-box');
+
+            if (!prompt) {
+                showToast('Masukkan prompt video terlebih dahulu.', 'warning');
+                return;
+            }
+
+            const isConnected = state.videoIntegration.provider !== 'none' && state.videoIntegration.endpointUrl.trim() !== '';
+            const payloadSpec = JSON.stringify({ prompt, aspectRatio: ratio, duration }, null, 2);
+
+            statusBox.innerHTML = `
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-cyan-300">Payload Video AI Tervalidasi</span>
+                        <button onclick="saveProject('Text to Video Prompt', 'T2V (${ratio} • ${duration})', ${JSON.stringify(payloadSpec)})" class="text-xs text-purple-300 hover:text-purple-200 font-semibold">+ Simpan Prompt</button>
+                    </div>
+                    <pre class="p-3 rounded-xl bg-[#0a0a12] border border-[#1f1f33] text-[11px] font-mono text-slate-300 overflow-x-auto">${escapeHtml(payloadSpec)}</pre>
+                    <div class="p-3 rounded-xl ${isConnected ? 'bg-cyan-950/30 border-cyan-500/30 text-cyan-200' : 'bg-rose-950/30 border-rose-500/30 text-rose-200'} border text-xs leading-relaxed">
+                        ${isConnected
+                            ? `Siap dikirim ke endpoint ${escapeHtml(state.videoIntegration.endpointUrl)}. Pastikan backend proxy Anda menangani autentikasi provider video.`
+                            : 'Rendering video tidak dijalankan karena belum ada layanan video AI yang terhubung. Aplikasi tidak menampilkan video palsu.'}
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * ============================================================================
+         * VIEW 5: IMAGE TO VIDEO (HONEST UPLOAD & MOTION SPEC)
+         * ============================================================================
+         */
+        let uploadedImgDataUrl = null;
+
+        function renderImageToVideoView() {
+            updateHeaderInfo(
+                'Image to Video',
+                state.lang === 'id'
+                    ? 'Unggah gambar dan tentukan instruksi gerakan kamera untuk model animasi video'
+                    : 'Upload an image and define camera motion instructions for video animation models'
+            );
+
+            return `
+                ${renderBackToDashboardBar('Image to Video • Motion Studio')}
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-6 rounded-2xl bg-[#13131f] border border-[#1f1f33] p-5 sm:p-6 space-y-4">
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-semibold text-slate-300">Upload Gambar Referensi *</label>
+                            <input type="file" accept="image/*" onchange="handleImageUpload(event)"
+                                class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-600/30 file:text-purple-200 hover:file:bg-purple-600/40 bg-[#0a0a12] border border-[#1f1f33] rounded-xl p-2" />
+                        </div>
+
+                        <div id="i2v-preview-box" class="rounded-xl bg-[#0a0a12] border border-dashed border-[#1f1f33] h-44 flex items-center justify-center overflow-hidden">
+                            ${uploadedImgDataUrl
+                                ? `<img src="${uploadedImgDataUrl}" alt="Preview" class="h-full w-full object-contain" />`
+                                : `<span class="text-xs text-slate-500">Pratinjau gambar akan tampil di sini</span>`
+                            }
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-semibold text-slate-300">Instruksi Gerakan Kamera / Subjek *</label>
+                            <textarea id="i2v-motion" rows="3"
+                                placeholder="Contoh: Slow dolly zoom in ke arah subjek, partikel cahaya melayang lembut, paralaks latar belakang sinematik..."
+                                class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] focus:border-cyan-500 p-3 text-sm text-white placeholder-slate-500 outline-none"></textarea>
+                        </div>
+
+                        <button onclick="handlePrepareImageToVideo()" class="w-full neon-btn py-3.5 px-5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2">
+                            <i data-lucide="image-play" class="w-4 h-4"></i>
+                            <span>Validasi Spesifikasi Image to Video</span>
+                        </button>
+                    </div>
+
+                    <div class="lg:col-span-6 space-y-4">
+                        <div class="rounded-2xl bg-amber-950/25 border border-amber-500/35 p-5 space-y-2">
+                            <div class="flex items-center gap-2 text-amber-300 font-bold text-xs">
+                                <i data-lucide="info" class="w-4 h-4"></i>
+                                <span>Transparansi Proses Image-to-Video</span>
+                            </div>
+                            <p class="text-xs text-amber-100/80 leading-relaxed">${t('honestVideoNoticeDesc')}</p>
+                        </div>
+                        <div id="i2v-status-box" class="rounded-2xl bg-[#13131f] border border-[#1f1f33] p-5 text-xs text-slate-400">
+                            Unggah gambar dan isi instruksi gerakan untuk menyiapkan payload animasi video AI.
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                uploadedImgDataUrl = reader.result;
+                const box = document.getElementById('i2v-preview-box');
+                if (box) box.innerHTML = `<img src="${uploadedImgDataUrl}" alt="Uploaded" class="h-full w-full object-contain" />`;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handlePrepareImageToVideo() {
+            const motion = document.getElementById('i2v-motion')?.value.trim();
+            const statusBox = document.getElementById('i2v-status-box');
+            if (!uploadedImgDataUrl || !motion) {
+                showToast('Unggah gambar dan isi instruksi gerakan terlebih dahulu.', 'warning');
+                return;
+            }
+            const isConnected = state.videoIntegration.provider !== 'none' && state.videoIntegration.endpointUrl.trim() !== '';
+            statusBox.innerHTML = `
+                <div class="space-y-2.5">
+                    <span class="text-xs font-bold text-white block">Status Proses Image-to-Video</span>
+                    <p class="text-xs text-slate-300"><strong>Instruksi Gerakan:</strong> ${escapeHtml(motion)}</p>
+                    <div class="p-3 rounded-xl ${isConnected ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-200' : 'bg-rose-950/30 border-rose-500/30 text-rose-200'} border text-xs leading-relaxed">
+                        ${isConnected
+                            ? `Gambar dan prompt gerakan siap dikirim ke ${escapeHtml(state.videoIntegration.provider)}.`
+                            : 'Status: Menunggu koneksi layanan Image-to-Video AI di Settings. Tidak ada video palsu yang dihasilkan.'}
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * ============================================================================
+         * VIEW 6: AI VOICE OVER (REAL GEMINI TTS WITH HONEST ERROR HANDLING)
+         * ============================================================================
+         */
+        function renderVoiceOverView() {
+            updateHeaderInfo(
+                'AI Voice Over',
+                state.lang === 'id'
+                    ? 'Konversi naskah menjadi sulih suara (Text-to-Speech) menggunakan Gemini TTS Engine'
+                    : 'Convert narration scripts into Text-to-Speech audio using Gemini TTS Engine'
+            );
+
+            return `
+                ${renderBackToDashboardBar('AI Voice Over • Gemini TTS')}
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-6 rounded-2xl bg-[#13131f] border border-[#1f1f33] p-5 sm:p-6 space-y-4">
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-semibold text-slate-300">Teks Narasi Voice Over *</label>
+                            <textarea id="tts-text" rows="5"
+                                placeholder="Masukkan teks narasi yang ingin diubah menjadi suara..."
+                                class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] focus:border-purple-500 p-3 text-sm text-white placeholder-slate-500 outline-none">${escapeHtml(state.workspace.lastScriptData?.narrationScript || state.workspace.lastScript)}</textarea>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-semibold text-slate-300">Karakter Suara</label>
+                                <select id="tts-voice" class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] p-3 text-xs font-medium text-white outline-none">
+                                    <option value="Kore">Kore (Tegas & Profesional)</option>
+                                    <option value="Puck">Puck (Energik & Kreator)</option>
+                                    <option value="Charon">Charon (Dalam & Dokumenter)</option>
+                                    <option value="Aoede">Aoede (Hangat & Storytelling)</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-semibold text-slate-300">Bahasa</label>
+                                <select id="tts-lang" class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] p-3 text-xs font-medium text-white outline-none">
+                                    <option value="id">Bahasa Indonesia</option>
+                                    <option value="en">English</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button id="btn-generate-tts" onclick="handleGenerateVoiceOver()" class="w-full neon-btn py-3.5 px-5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2">
+                            <i data-lucide="mic" class="w-4 h-4"></i>
+                            <span>Generate AI Voice Over</span>
+                        </button>
+                    </div>
+
+                    <div class="lg:col-span-6">
+                        <div id="tts-result-box" class="rounded-2xl bg-[#13131f] border border-[#1f1f33] p-6 min-h-[260px] flex flex-col items-center justify-center text-center">
+                            <div class="w-12 h-12 rounded-2xl bg-fuchsia-500/15 border border-fuchsia-500/30 flex items-center justify-center text-fuchsia-400 mb-3">
+                                <i data-lucide="volume-2" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-white">Output Audio Gemini TTS</h3>
+                            <p class="text-xs text-slate-400 max-w-sm mt-1">Pemutar audio WAV nyata akan muncul di sini setelah sintesis suara berhasil.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function handleGenerateVoiceOver() {
+            const text = document.getElementById('tts-text')?.value.trim();
+            const voice = document.getElementById('tts-voice')?.value || 'Kore';
+            if (!text) {
+                showToast('Masukkan teks narasi terlebih dahulu.', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('btn-generate-tts');
+            const box = document.getElementById('tts-result-box');
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>${t('generating')}</span>`;
+            box.innerHTML = `<i data-lucide="loader-2" class="w-8 h-8 text-fuchsia-400 animate-spin mb-2"></i><p class="text-xs font-bold text-white">${t('generating')}</p>`;
+            lucide.createIcons();
+
+            try {
+                const wavUrl = await callGeminiTTS(text, voice);
+                box.innerHTML = `
+                    <div class="w-full space-y-4 text-left">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-emerald-400">Audio Berhasil Disintesis (${escapeHtml(voice)})</span>
+                            <a href="${wavUrl}" download="voiceover-${voice.toLowerCase()}.wav" class="px-3 py-1.5 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-xs font-bold text-cyan-200">
+                                Download WAV
+                            </a>
+                        </div>
+                        <audio controls src="${wavUrl}" class="w-full"></audio>
+                    </div>
+                `;
+                showToast('Voice over berhasil dibuat!', 'success');
+            } catch (err) {
+                box.innerHTML = `<div class="p-4 rounded-xl bg-rose-950/40 border border-rose-500/40 text-xs text-rose-200 text-left w-full">${escapeHtml(err.message)}</div>`;
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="mic" class="w-4 h-4"></i><span>Generate AI Voice Over</span>`;
+                lucide.createIcons();
+            }
+        }
+
+        /**
+         * ============================================================================
+         * VIEW 7: AUTO SUBTITLE & CAPTION SUITE (SRT / VTT + SOCIAL CAPTION)
+         * ============================================================================
+         */
+        let lastSubtitleOutput = null;
+
+        function renderAutoSubtitleView() {
+            updateHeaderInfo(
+                'Auto Subtitle',
+                state.lang === 'id'
+                    ? 'Buat subtitle berstempel waktu (SRT / VTT) otomatis & caption media sosial dari naskah video'
+                    : 'Generate timestamped subtitles (SRT / VTT) & social media captions automatically from your script'
+            );
+
+            const sourceText = state.workspace.lastScriptData?.narrationScript || state.workspace.lastScript || '';
+
+            return `
+                ${renderBackToDashboardBar('Auto Subtitle • SRT & VTT Generator')}
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-5 rounded-2xl bg-[#13131f] border border-[#1f1f33] p-5 sm:p-6 space-y-4">
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-semibold text-slate-300">
+                                ${state.lang === 'id' ? 'Naskah Narasi atau Transkrip Audio *' : 'Narration Script or Audio Transcript *'}
+                            </label>
+                            <textarea id="subtitle-input" rows="5"
+                                placeholder="${state.lang === 'id' ? 'Tempel naskah narasi video Anda untuk dipecah menjadi baris subtitle berstempel waktu...' : 'Paste your video narration script to split into timestamped subtitle lines...'}"
+                                class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] focus:border-purple-500 p-3 text-sm text-white placeholder-slate-500 outline-none">${escapeHtml(sourceText)}</textarea>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-semibold text-slate-300">
+                                    ${state.lang === 'id' ? 'Format Subtitle' : 'Subtitle Format'}
+                                </label>
+                                <select id="subtitle-format" class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] p-3 text-xs font-medium text-white outline-none">
+                                    <option value="SRT">SubRip (.SRT) — CapCut / Premiere</option>
+                                    <option value="VTT">WebVTT (.VTT) — YouTube / Web</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-semibold text-slate-300">
+                                    ${state.lang === 'id' ? 'Gaya Pemotongan Baris' : 'Line Pacing Style'}
+                                </label>
+                                <select id="subtitle-pacing" class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] p-3 text-xs font-medium text-white outline-none">
+                                    <option value="short-punchy">${state.lang === 'id' ? 'Cepat & Singkat (TikTok / Reels 3-5 kata)' : 'Fast & Punchy (TikTok / Reels 3-5 words)'}</option>
+                                    <option value="standard">${state.lang === 'id' ? 'Standar Kalimat (YouTube)' : 'Standard Sentence (YouTube)'}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button id="btn-generate-subtitle" onclick="handleGenerateAutoSubtitle()" class="w-full neon-btn py-3.5 px-5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2">
+                            <i data-lucide="captions" class="w-4 h-4"></i>
+                            <span>${state.lang === 'id' ? 'Generate Auto Subtitle' : 'Generate Auto Subtitle'}</span>
+                        </button>
+                    </div>
+
+                    <div class="lg:col-span-7" id="subtitle-results">
+                        ${lastSubtitleOutput
+                            ? renderSubtitleResultCard(lastSubtitleOutput)
+                            : `<div class="rounded-2xl bg-[#13131f] border border-dashed border-[#1f1f33] p-10 text-center h-full flex flex-col items-center justify-center">
+                                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-3">
+                                        <i data-lucide="captions" class="w-6 h-6"></i>
+                                    </div>
+                                    <h3 class="text-sm font-bold text-white">${state.lang === 'id' ? 'Generator Subtitle Otomatis (SRT / VTT)' : 'Automatic Subtitle Generator (SRT / VTT)'}</h3>
+                                    <p class="text-xs text-slate-400 max-w-md mt-1 leading-relaxed">${state.lang === 'id' ? 'Ubah naskah narasi menjadi file subtitle berstempel waktu yang siap diimpor ke CapCut, Premiere Pro, atau YouTube Studio.' : 'Convert narration scripts into timestamped subtitle files ready to import into CapCut, Premiere Pro, or YouTube Studio.'}</p>
+                               </div>`
+                        }
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSubtitleResultCard(data) {
+            return `
+                <div class="rounded-2xl bg-[#13131f] border border-[#1f1f33] p-5 sm:p-6 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/5">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 text-xs font-extrabold">${escapeHtml(data.format)}</span>
+                            <span class="text-xs font-semibold text-slate-300">${state.lang === 'id' ? 'Subtitle Siap Digunakan' : 'Subtitles Ready'}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="copyToClipboard(${JSON.stringify(data.subtitleText)})" class="px-3 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-xs font-bold text-cyan-200 flex items-center gap-1.5">
+                                <i data-lucide="copy" class="w-3.5 h-3.5 text-cyan-400"></i> Copy ${escapeHtml(data.format)}
+                            </button>
+                            <button onclick="downloadSubtitleFile()" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-semibold text-white flex items-center gap-1.5">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download
+                            </button>
+                            <button onclick="saveProject('Auto Subtitle (${data.format})', 'Video Subtitle Track', ${JSON.stringify(data.subtitleText)})" class="px-3 py-1.5 rounded-lg bg-purple-600/25 border border-purple-500/40 text-xs font-semibold text-purple-200">
+                                Save
+                            </button>
+                        </div>
+                    </div>
+
+                    <pre class="p-4 rounded-xl bg-[#0a0a12] border border-[#1f1f33] text-xs font-mono text-emerald-200 whitespace-pre-wrap max-h-96 overflow-y-auto leading-relaxed">${escapeHtml(data.subtitleText)}</pre>
+                </div>
+            `;
+        }
+
+        function downloadSubtitleFile() {
+            if (!lastSubtitleOutput?.subtitleText) return;
+            const ext = lastSubtitleOutput.format === 'VTT' ? 'vtt' : 'srt';
+            const blob = new Blob([lastSubtitleOutput.subtitleText], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ai-video-tools-studio.${ext}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        async function handleGenerateAutoSubtitle() {
+            const input = document.getElementById('subtitle-input').value.trim();
+            const format = document.getElementById('subtitle-format').value;
+            const pacing = document.getElementById('subtitle-pacing').value;
+
+            if (!input) {
+                showToast(state.lang === 'id' ? 'Masukkan teks narasi terlebih dahulu.' : 'Please enter narration text first.', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('btn-generate-subtitle');
+            const resultsEl = document.getElementById('subtitle-results');
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>${t('generating')}</span>`;
+            resultsEl.innerHTML = `
+                <div class="p-10 rounded-2xl bg-[#13131f] border border-emerald-500/30 text-center animate-neon-border">
+                    <i data-lucide="loader-2" class="w-8 h-8 text-emerald-400 animate-spin mx-auto mb-2"></i>
+                    <p class="text-sm font-bold text-white">${t('generating')}</p>
+                </div>
+            `;
+            lucide.createIcons();
+
+            const pacingRule = pacing === 'short-punchy'
+                ? 'Split into short, punchy 3 to 5 word phrases ideal for TikTok/Reels dynamic captions.'
+                : 'Split into natural, readable 8 to 12 word subtitle lines ideal for YouTube.';
+
+            const formatRule = format === 'VTT'
+                ? 'Output strictly valid WebVTT format starting with WEBVTT and timestamps like 00:00:00.000 --> 00:00:02.500.'
+                : 'Output strictly valid SubRip (.SRT) format with sequential index numbers (1, 2, 3...) and timestamps like 00:00:00,000 --> 00:00:02,500.';
+
+            const prompt = `Convert the following narration script into realistic, accurately paced video subtitles.
+${formatRule}
+${pacingRule}
+Return ONLY the raw ${format} subtitle text without markdown code blocks or extra commentary.
+
+Script:
+${input}`;
+
+            try {
+                const subtitleText = await callGeminiText(prompt, "You are a professional video captioning and subtitling specialist.");
+                const cleaned = subtitleText.replace(/^```[a-z]*\n?/i, '').replace(/```$/i, '').trim();
+                lastSubtitleOutput = { format, subtitleText: cleaned };
+                resultsEl.innerHTML = renderSubtitleResultCard(lastSubtitleOutput);
+                showToast(state.lang === 'id' ? `Subtitle ${format} berhasil dibuat!` : `${format} subtitles generated!`, 'success');
+            } catch (err) {
+                resultsEl.innerHTML = `<div class="p-4 rounded-xl bg-rose-950/40 border border-rose-500/40 text-xs text-rose-200">${escapeHtml(err.message)}</div>`;
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="captions" class="w-4 h-4"></i><span>${state.lang === 'id' ? 'Generate Auto Subtitle' : 'Generate Auto Subtitle'}</span>`;
+                lucide.createIcons();
+            }
+        }
+
+        /**
+         * ============================================================================
+         * VIEW 8: MY PROJECTS (LOCAL STORAGE PERSISTENCE)
+         * ============================================================================
+         */
+        function renderProjectsView() {
+            updateHeaderInfo(
+                'My Projects',
+                state.lang === 'id'
+                    ? 'Semua naskah, storyboard, dan subtitle tersimpan secara lokal di browser Anda'
+                    : 'All saved scripts, storyboards, and subtitles stored locally in your browser'
+            );
+
+            if (state.projects.length === 0) {
+                return `
+                    ${renderBackToDashboardBar('My Projects • Local Storage')}
+                    <div class="rounded-3xl bg-[#13131f] border border-dashed border-[#1f1f33] p-12 text-center max-w-xl mx-auto my-8 space-y-4">
+                        <div class="w-14 h-14 rounded-2xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 mx-auto">
+                            <i data-lucide="folder-kanban" class="w-7 h-7"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">${state.lang === 'id' ? 'Belum Ada Proyek Tersimpan' : 'No Saved Projects Yet'}</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">${t('noProjectsYet')}</p>
+                        <button onclick="navigateTo('script')" class="neon-btn px-5 py-2.5 rounded-xl text-xs font-bold text-white inline-flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>${t('createNewVideo')}</span>
+                        </button>
+                    </div>
+                `;
+            }
+
+            return `
+                ${renderBackToDashboardBar('My Projects • Local Storage')}
+                <div class="space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        ${state.projects.map(p => `
+                            <div class="rounded-2xl bg-[#13131f] border border-[#1f1f33] p-5 flex flex-col justify-between gap-4">
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="px-2.5 py-0.5 rounded-md bg-purple-500/15 text-purple-300 text-[10px] font-extrabold uppercase">${escapeHtml(p.type)}</span>
+                                        <span class="text-[11px] text-slate-500">${new Date(p.createdAt).toLocaleString()}</span>
+                                    </div>
+                                    <h4 class="text-base font-bold text-white">${escapeHtml(p.title)}</h4>
+                                    <pre class="p-3 rounded-xl bg-[#0a0a12] border border-[#1f1f33] text-xs text-slate-300 whitespace-pre-wrap max-h-44 overflow-y-auto font-sans">${escapeHtml(p.content)}</pre>
+                                </div>
+                                <div class="flex items-center justify-between pt-3 border-t border-white/5">
+                                    <button onclick="copyToClipboard(${JSON.stringify(p.content)})" class="px-3 py-1.5 rounded-lg bg-cyan-500/15 text-cyan-300 text-xs font-bold flex items-center gap-1.5">
+                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
+                                    </button>
+                                    <button onclick="deleteProject('${p.id}')" class="px-3 py-1.5 rounded-lg bg-rose-500/15 text-rose-300 text-xs font-bold flex items-center gap-1.5">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * ============================================================================
+         * VIEW 9: SETTINGS (PROFILE, LANGUAGE, THEME & VIDEO INTEGRATION)
+         * ============================================================================
+         */
+        function renderSettingsView() {
+            updateHeaderInfo(
+                'Settings',
+                state.lang === 'id'
+                    ? 'Kelola profil kreator, preferensi bahasa, tema gelap, dan endpoint model video'
+                    : 'Manage creator profile, language preferences, dark theme, and video model endpoints'
+            );
+
+            const hasRuntimeKey = Boolean(sessionStorage.getItem(STORAGE_KEYS.RUNTIME_KEY));
+
+            return `
+                ${renderBackToDashboardBar('Settings • Studio Preferences')}
+                <div class="max-w-3xl space-y-6">
+                    <!-- Creator Profile -->
+                    <div class="rounded-2xl bg-[#13131f] border border-[#1f1f33] p-6 space-y-4">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i data-lucide="user" class="w-4 h-4 text-purple-400"></i>
+                            <span>Profil Kreator & Bahasa</span>
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-semibold text-slate-300">Nama Studio / Kreator</label>
+                                <input id="set-profile-name" type="text" value="${escapeHtml(state.profile.name)}"
+                                    class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] p-3 text-xs text-white outline-none" />
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-semibold text-slate-300">Bahasa Antarmuka</label>
+                                <select id="set-lang" class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] p-3 text-xs text-white outline-none">
+                                    <option value="id" ${state.lang === 'id' ? 'selected' : ''}>Bahasa Indonesia</option>
+                                    <option value="en" ${state.lang === 'en' ? 'selected' : ''}>English</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gemini API Session Configuration -->
+                    <div class="rounded-2xl bg-[#13131f] border border-[#1f1f33] p-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                <i data-lucide="key-round" class="w-4 h-4 text-cyan-400"></i>
+                                <span>Konfigurasi Gemini API (Google AI Studio)</span>
+                            </h3>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${getActiveGeminiKey() ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}">
+                                ${getActiveGeminiKey() ? 'Aktif' : 'Belum Diatur'}
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Jika backend Node.js Anda belum menyuntikkan secret <code>GEMINI_API_KEY</code>, Anda dapat memasukkan kunci API sementara (disimpan hanya di <code>sessionStorage</code> browser dan tidak pernah ditampilkan kembali).
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input id="set-gemini-session-key" type="password"
+                                placeholder="${hasRuntimeKey ? '•••••••••••••••• (Tersimpan di sesi ini)' : 'Tempel GEMINI_API_KEY dari Google AI Studio...'}"
+                                class="flex-1 rounded-xl bg-[#0a0a12] border border-[#1f1f33] p-3 text-xs text-white outline-none" />
+                            <button onclick="saveRuntimeGeminiKey()" class="px-4 py-2.5 rounded-xl bg-cyan-600/30 hover:bg-cyan-600/40 border border-cyan-500/40 text-xs font-bold text-cyan-200">
+                                Simpan Kunci Sesi
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- External Video Model Endpoint -->
+                    <div class="rounded-2xl bg-[#13131f] border border-[#1f1f33] p-6 space-y-4">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i data-lucide="video" class="w-4 h-4 text-amber-400"></i>
+                            <span>Integrasi Model Video AI Eksternal (Opsional)</span>
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-semibold text-slate-300">Provider Video AI</label>
+                                <select id="set-video-provider" class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] p-3 text-xs text-white outline-none">
+                                    <option value="none" ${state.videoIntegration.provider === 'none' ? 'selected' : ''}>Tidak Ada (Mode Aman)</option>
+                                    <option value="veo" ${state.videoIntegration.provider === 'veo' ? 'selected' : ''}>Google Veo Endpoint</option>
+                                    <option value="runway" ${state.videoIntegration.provider === 'runway' ? 'selected' : ''}>Runway Gen-3 Endpoint</option>
+                                    <option value="kling" ${state.videoIntegration.provider === 'kling' ? 'selected' : ''}>Kling AI Endpoint</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-semibold text-slate-300">Webhook / Proxy URL</label>
+                                <input id="set-video-endpoint" type="url" value="${escapeHtml(state.videoIntegration.endpointUrl)}"
+                                    placeholder="https://api.domain-anda.com/video-render"
+                                    class="w-full rounded-xl bg-[#0a0a12] border border-[#1f1f33] p-3 text-xs text-white outline-none" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="saveAllSettings()" class="neon-btn px-6 py-3 rounded-xl text-xs sm:text-sm font-bold text-white">
+                        Simpan Semua Pengaturan
+                    </button>
+                </div>
+            `;
+        }
+
+        function saveRuntimeGeminiKey() {
+            const input = document.getElementById('set-gemini-session-key');
+            const val = input?.value.trim();
+            if (!val) {
+                showToast('Masukkan Gemini API Key terlebih dahulu.', 'warning');
+                return;
+            }
+            sessionStorage.setItem(STORAGE_KEYS.RUNTIME_KEY, val);
+            input.value = '';
+            updateApiStatusIndicator();
+            renderView();
+            showToast('Kunci sesi Gemini API berhasil disimpan!', 'success');
+        }
+
+        function saveAllSettings() {
+            const name = document.getElementById('set-profile-name')?.value.trim() || 'Creator Studio';
+            const lang = document.getElementById('set-lang')?.value || 'id';
+            const provider = document.getElementById('set-video-provider')?.value || 'none';
+            const endpointUrl = document.getElementById('set-video-endpoint')?.value.trim() || '';
+
+            state.profile.name = name;
+            state.lang = lang;
+            state.videoIntegration = { provider, endpointUrl };
+
+            persistSettings();
+            updateProfileHeader();
+            renderSidebar();
+            renderView();
+            showToast(state.lang === 'id' ? 'Pengaturan berhasil disimpan!' : 'Settings saved!', 'success');
+        }
+
+        /**
+         * ============================================================================
+         * MAIN ROUTER & INITIALIZATION
+         * ============================================================================
+         */
+        function renderView() {
+            const container = document.getElementById('main-content');
+            if (!container) return;
+            switch (state.currentTab) {
+                case 'dashboard':
+                    container.innerHTML = renderDashboardView();
+                    break;
+                case 'script':
+                    container.innerHTML = renderScriptGeneratorView();
+                    break;
+                case 'storyboard':
+                    container.innerHTML = renderStoryboardView();
+                    break;
+                case 'text2video':
+                    container.innerHTML = renderTextToVideoView();
+                    break;
+                case 'img2video':
+                    container.innerHTML = renderImageToVideoView();
+                    break;
+                case 'voiceover':
+                    container.innerHTML = renderVoiceOverView();
+                    break;
+                case 'subtitle':
+                case 'caption':
+                    container.innerHTML = renderAutoSubtitleView();
+                    break;
+                case 'projects':
+                    container.innerHTML = renderProjectsView();
+                    break;
+                case 'settings':
+                    container.innerHTML = renderSettingsView();
+                    break;
+                default:
+                    container.innerHTML = renderDashboardView();
+            }
+            lucide.createIcons();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            updateProjectBadge();
+            updateProfileHeader();
+            updateApiStatusIndicator();
+            renderSidebar();
+            renderView();
+        });
+    </script>
+</body>
+</html>
